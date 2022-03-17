@@ -13,9 +13,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    owner_name = serializers.ReadOnlyField(source="owner.username")
+    buyer_name = serializers.ReadOnlyField(source="buyer.username")
 
     class Meta:
         model = Product
-        fields = '__all__'
-        read_only_fields = ('id', 'name', 'price', 'seller')
+        # fields = '__all__'
+        fields = ('id', 'name', 'price', 'owner_name', 'buyer_name', 'sell_date')
 
+    # 处理外键字段
+    # def create(self, validated_data):
+    #     return Product.objects.create(seller=self.context["seller"], **validated_data)

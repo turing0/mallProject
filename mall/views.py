@@ -6,12 +6,14 @@ from .serializers import ProductSerializer
 from .serializers import UserSerializer
 from rest_framework import status, exceptions
 from rest_framework import generics
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework import permissions
-# from .permissions import IsOwnerOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view
 import uuid
 from django.core.cache import cache
 from rest_framework.response import Response
+from rest_framework import viewsets
 
 
 class UserRegister(APIView):
@@ -60,7 +62,6 @@ class UserLogin(APIView):
         except User.DoesNotExist:
             raise exceptions.NotFound
 
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -68,16 +69,31 @@ class ProductList(APIView):
     """
     List all products, or create a new product.
     """
+    # authentication_classes = (SessionAuthentication, BasicAuthentication)
+
+    permission_classes = (IsAuthenticated,)
     def get(self, request, format=None):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+
+        user = User.objects.get(username=request.user)
+        if user.balance > 0:
+            return Response(serializer.data)
+        data = {
+            'error': 'Insufficient balance! '
+        }
+        return Response(data)
+        # return Response(serializer.data)
 
     def post(self, request, format=None):
+        user = request.user
+        # serializer = ProductSerializer(data=request.data, context={"seller": user})
         serializer = ProductSerializer(data=request.data)
+
         if serializer.is_valid():
             # 注意：手动将 request.user 与 seller 绑定
-            serializer.save(seller=request.user)
+            serializer.save(owner=request.user)
+            # serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -87,6 +103,7 @@ class ProductDetail(APIView):
     """
     Retrieve, update or delete an article instance.
     """
+
     def get_object(self, pk):
         try:
             return Product.objects.get(pk=pk)

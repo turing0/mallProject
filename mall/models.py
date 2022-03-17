@@ -1,18 +1,20 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
+
 
 # User = get_user_model()
 
 
-class User(models.Model):
-    username = models.CharField(max_length=32, unique=True, verbose_name='用户名', help_text='用户名')
-    password = models.CharField(max_length=256, verbose_name='密码', help_text='密码')
+# 集成内置的user模型,并添加新的字段
+class User(AbstractUser):
     balance = models.FloatField(default=1000)
+    # image = models.ImageField(upload_to='image/%Y/%m', default='image/default.png', max_length=100)
 
-    # class Meta:
-    #     verbose_name = '用户'
-    #     verbose_name_plural = verbose_name
+    class Meta:
+        verbose_name = "用户信息"
+        verbose_name_plural = "用户信息"
 
     def __str__(self):
         return self.username
@@ -23,11 +25,10 @@ class Product(models.Model):
 
     name = models.CharField(max_length=90, db_index=True)
     price = models.FloatField()
-    # attachment = models.FileField()
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_products_seller')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_products_owner')
     buyer = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='%(class)s_products_buyer')
     sell_date = models.DateTimeField(auto_now_add=False, null=True)
+    # attachment = models.FileField()
 
     def __str__(self):
         return self.name + ', ' + str(self.price)
-

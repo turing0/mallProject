@@ -41,6 +41,13 @@ INSTALLED_APPS = [
     'mall',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',  # session认证，浏览器关闭，认证不会立即失效，注销后认证失效
+        'rest_framework.authentication.BasicAuthentication',   # 基本认证，浏览器关闭，认证即失效，注销当然也会失效
+    )
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -126,3 +133,5 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'mall.User'
