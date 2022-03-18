@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view
 import uuid
 from django.core.cache import cache
 from rest_framework.response import Response
+from django_filters import rest_framework
 from rest_framework import viewsets
 
 
@@ -98,6 +99,76 @@ class ProductList(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from django.utils import timezone #引入timezone模块
+class ProductBuy(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+
+        user = User.objects.get(username=request.user)
+        if user.balance > 0:
+            return Response(serializer.data)
+        data = {
+            'error': 'Insufficient balance! '
+        }
+        return Response(data)
+        # return Response(serializer.data)
+
+    def post(self, request, format=None):
+        product_id = request.data.get('id')
+        # user = request.user
+        user = User.objects.get(username=request.user)
+        product = Product.objects.get(id=product_id)
+
+        if product.buyer:
+            return Response({'error': "This product has been bought."})
+        if str(user) == product.owner:
+            return Response({'error': "Can't buy own stuff!"})
+
+        if user.balance >= product.price:
+
+            user.balance -= product.price
+            user.save()
+            seller_user = User.objects.get(username=product.owner)
+            seller_user.balance += product.price
+            seller_user.save()
+
+            data = {
+                'name': product.name,
+                'price': product.price,
+                'owner': str(user.username),
+                'buyer': str(user.username),
+                'sell_date': timezone.now()
+            }
+
+            serializer = ProductSerializer(instance=product, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+        data = {
+            'error': 'Insufficient balance! '
+        }
+        return Response(data)
+
+        data = {
+            'id': product_id,
+            'u': str(user),
+            'p': str(product.owner),
+            'date': str(sell_date)
+        }
+        # serializer = ProductSerializer(data=request.data, context={"seller": user})
+        # serializer = ProductSerializer(data=request.data)
+        return Response(data)
+        if serializer.is_valid():
+            # 注意：手动将 request.user 与 seller 绑定
+            serializer.save(owner=request.user)
+            # serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ProductDetail(APIView):
     """
@@ -127,3 +198,51 @@ class ProductDetail(APIView):
         product = self.get_object(pk)
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class OrderList(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = (rest_framework.DjangoFilterBackend,)
+    filterset_fields = {'sell_date': ['isnull']}
+    # filterset_fields = {
+    #     # 'buyer': ['isnull']
+    #     'name': ['香蕉']
+    # }
+
+        # # products = Product.objects.filter(buyer__isnull=True)
+        # products = Product.objects.all()
+        # filter_backends = (rest_framework.DjangoFilterBackend,)
+        # filterset_fields = {
+        #     'buyer': ['isnull']
+        # }
+        # serializer = ProductSerializer(data=products, many=True)
+        #
+        # # queryset = Product.objects.filter(buyer__isnull=True)
+        # # serializer = ProductSerializer(data=products, many=True)
+        # # data = {
+        # #     'res': len(products)
+        # # }
+        # # return Response(data)
+        # if serializer.is_valid():
+        #     return Response(serializer.data)
+        # #
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+    # def post(self, request, format=None):
+    #     user = request.user
+    #     # serializer = ProductSerializer(data=request.data, context={"seller": user})
+    #     serializer = ProductSerializer(data=request.data)
+    #
+    #     if serializer.is_valid():
+    #         # 注意：手动将 request.user 与 seller 绑定
+    #         serializer.save(owner=request.user)
+    #         # serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

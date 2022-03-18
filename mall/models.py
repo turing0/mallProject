@@ -25,8 +25,10 @@ class Product(models.Model):
 
     name = models.CharField(max_length=90, db_index=True)
     price = models.FloatField()
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_products_owner')
-    buyer = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='%(class)s_products_buyer')
+    # owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_products_owner')
+    owner = models.CharField(max_length=90, null=True)
+    # buyer = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='%(class)s_products_buyer')
+    buyer = models.CharField(max_length=90, null=True)
     sell_date = models.DateTimeField(auto_now_add=False, null=True)
     # attachment = models.FileField()
 
