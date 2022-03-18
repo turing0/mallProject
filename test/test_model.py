@@ -1,6 +1,6 @@
 import pytest
-from .models import User
-from .models import Product
+from mall.models import User
+from mall.models import Product
 from mixer.backend.django import mixer
 from django.urls import reverse
 

@@ -1,5 +1,5 @@
 import pytest
-
+from rest_framework.authtoken.models import Token
 
 @pytest.mark.django_db
 def test_unauthorized_request(api_client):
@@ -28,8 +28,13 @@ def test_404_request(api_client):
 
 # @pytest.mark.django_db
 # def test_register(api_client):
-#     response = api_client.post('/api/register')
-#     assert response.status_code == 404
+#     data = {
+#         'username': '654231',
+#         'password': '654231'
+#     }
+#     response = api_client.post('/api/register', json=data)
+#     print(response, 'response')
+#     assert response.status_code == 200
 
 # def test_unauthorized_request(api_client):
 #     response = api_client.post('/api/products/buy')

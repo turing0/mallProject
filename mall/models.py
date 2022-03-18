@@ -3,11 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import get_user_model
 
-
 # User = get_user_model()
 
 
-# 集成内置的user模型,并添加新的字段
 class User(AbstractUser):
     balance = models.FloatField(default=1000)
     # image = models.ImageField(upload_to='image/%Y/%m', default='image/default.png', max_length=100)

@@ -6,15 +6,12 @@ from .serializers import ProductSerializer
 from .serializers import UserSerializer
 from rest_framework import status, exceptions
 from rest_framework import generics
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
-import uuid
 from django.core.cache import cache
 from rest_framework.response import Response
 from django_filters import rest_framework
-from rest_framework import viewsets
+from django.utils import timezone  # 引入timezone模块
+import uuid
 
 
 class UserRegister(APIView):
@@ -30,7 +27,6 @@ class UserRegister(APIView):
                     'username': user.username,
                     'password': user.password,
                     'balance': user.balance,
-
                 }
                 return Response(data, status=status.HTTP_200_OK)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -63,16 +59,15 @@ class UserLogin(APIView):
         except User.DoesNotExist:
             raise exceptions.NotFound
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductList(APIView):
     """
     List all products, or create a new product.
     """
-    # authentication_classes = (SessionAuthentication, BasicAuthentication)
-
     permission_classes = (IsAuthenticated,)
+
     def get(self, request, format=None):
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
@@ -99,7 +94,7 @@ class ProductList(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-from django.utils import timezone #引入timezone模块
+
 class ProductBuy(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -152,23 +147,6 @@ class ProductBuy(APIView):
         }
         return Response(data)
 
-        data = {
-            'id': product_id,
-            'u': str(user),
-            'p': str(product.owner),
-            'date': str(sell_date)
-        }
-        # serializer = ProductSerializer(data=request.data, context={"seller": user})
-        # serializer = ProductSerializer(data=request.data)
-        return Response(data)
-        if serializer.is_valid():
-            # 注意：手动将 request.user 与 seller 绑定
-            serializer.save(owner=request.user)
-            # serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ProductDetail(APIView):
     """
@@ -207,42 +185,3 @@ class OrderList(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
     filter_backends = (rest_framework.DjangoFilterBackend,)
     filterset_fields = {'sell_date': ['isnull']}
-    # filterset_fields = {
-    #     # 'buyer': ['isnull']
-    #     'name': ['香蕉']
-    # }
-
-        # # products = Product.objects.filter(buyer__isnull=True)
-        # products = Product.objects.all()
-        # filter_backends = (rest_framework.DjangoFilterBackend,)
-        # filterset_fields = {
-        #     'buyer': ['isnull']
-        # }
-        # serializer = ProductSerializer(data=products, many=True)
-        #
-        # # queryset = Product.objects.filter(buyer__isnull=True)
-        # # serializer = ProductSerializer(data=products, many=True)
-        # # data = {
-        # #     'res': len(products)
-        # # }
-        # # return Response(data)
-        # if serializer.is_valid():
-        #     return Response(serializer.data)
-        # #
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-    # def post(self, request, format=None):
-    #     user = request.user
-    #     # serializer = ProductSerializer(data=request.data, context={"seller": user})
-    #     serializer = ProductSerializer(data=request.data)
-    #
-    #     if serializer.is_valid():
-    #         # 注意：手动将 request.user 与 seller 绑定
-    #         serializer.save(owner=request.user)
-    #         # serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

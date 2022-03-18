@@ -3,8 +3,6 @@ from .models import User
 from .models import Product
 from django.contrib.auth import get_user_model
 
-# User = get_user_model()
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,7 +12,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     # owner_name = serializers.ReadOnlyField(source="owner.username")
-    # buyer_name = serializers.ReadOnlyField(source="buyer.username")
 
     class Meta:
         model = Product
